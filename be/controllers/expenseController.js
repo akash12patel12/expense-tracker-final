@@ -22,8 +22,9 @@ exports.addex = (req, res) => {
 
 exports.getAll = async (req, res) => {
   // console.log(req.user);
-const offset = req.body.offset * 4;
-const limit =4;
+const offset = req.body.offset * req.body.limit;
+const limit = req.body.limit;
+console.log(req.body);
 
   const result = await UserServices.getExpenses(req, {
     limit :limit,

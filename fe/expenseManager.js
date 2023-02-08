@@ -1,9 +1,11 @@
+const limitGlobal =  localStorage.getItem('limit') ? parseInt(localStorage.getItem('limit')) : 5 ;
+console.log(limitGlobal);
 const config = {
   headers: {
     Authorization: localStorage.getItem("token"),
   },
 };
-getExpenses(0);
+getExpenses(0, limitGlobal);
 function submitExpense(e) {
   e.preventDefault();
   const newExpense = {
@@ -14,13 +16,13 @@ function submitExpense(e) {
 
   axios.post("http://localhost:3000/addex", newExpense, config).then(async (res) => {
      paginate();
-     getExpenses(Math.ceil(await getTotalNumberOfExpenses()/4)-1);
+     getExpenses(Math.ceil(await getTotalNumberOfExpenses()/limitGlobal)-1, limitGlobal);
   });
 }
 
 
 
-async function getExpenses(offset) {
+async function getExpenses(offset, limitGlobal) {
   document.getElementById("expenselist").innerHTML = `  <tr>
    
     <th>Description</th>
@@ -29,7 +31,7 @@ async function getExpenses(offset) {
     <th>Delete</th>
     <th>Edit</th>
 </tr>`;
-  axios.post("http://localhost:3000/getAll", {offset : offset}, config).then((all) => {
+  axios.post("http://localhost:3000/getAll", {offset : offset, limit : limitGlobal}, config).then((all) => {
     // all.data is the array of all expenses
     console.log(all.data);
     all.data.forEach((expense) => {
@@ -55,7 +57,7 @@ async function deleteExpense(id) {
     .then( async (response) => {
       // console.log(response);
       paginate();
-      getExpenses(Math.ceil(await getTotalNumberOfExpenses()/4)-1);
+      getExpenses(Math.ceil(await getTotalNumberOfExpenses()/limitGlobal)-1, limitGlobal);
     });
 }
 
@@ -105,7 +107,7 @@ paginate();
 async function paginate(){
  let count = await getTotalNumberOfExpenses();
 
- let totalPages = Math.ceil(count/4);
+ let totalPages = Math.ceil(count/limitGlobal);
 //  console.log(totalPages);
   let i = 0;
   const paginationDiv = document.getElementById('pagination');
@@ -113,8 +115,19 @@ async function paginate(){
   // console.log(paginationDiv.innerHTML);
   while(i < totalPages){
     // console.log(i);
-    paginationDiv.innerHTML = paginationDiv.innerHTML + `<button class="btn btn-primary m-2" onclick="getExpenses(${i})">${i+1}</button>`;
+    paginationDiv.innerHTML = paginationDiv.innerHTML + `<button class="btn btn-primary m-2" onclick="getExpenses(${i}, ${limitGlobal})">${i+1}</button>`;
     // console.log(paginationDiv.innerHTML);
     i++;
   } 
+}
+
+
+
+
+async function setLimit(e){
+  e.preventDefault();
+  // console.log('clicked');
+ await localStorage.setItem('limit', e.target.limit.value);
+  location.reload();
+  // getExpenses(0, parseInt(e.target.limit.value) )
 }
