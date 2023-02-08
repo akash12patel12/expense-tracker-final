@@ -1,6 +1,6 @@
 const Expense = require("../models/expense");
 const User = require("../models/user");
-const UserServices = require('../services/userServices')
+const UserServices = require("../services/userServices");
 exports.addex = (req, res) => {
   Expense.create({
     amount: req.body.amount,
@@ -9,7 +9,10 @@ exports.addex = (req, res) => {
     userEmId: req.user.userId,
   })
     .then((result) => {
-      User.increment('totalExpenses', { by: req.body.amount, where: { id: req.user.userId} });
+      User.increment("totalExpenses", {
+        by: req.body.amount,
+        where: { id: req.user.userId },
+      });
       res.status(201).json(result);
     })
     .catch((err) => {
@@ -19,10 +22,17 @@ exports.addex = (req, res) => {
 
 exports.getAll = async (req, res) => {
   // console.log(req.user);
+const offset = req.body.offset * 4;
+const limit =4;
 
-  const result = await UserServices.getExpenses(req, { where: { userEmId: req.user.userId } , attributes : ['id','desc' , 'amount', 'cat'] } )
+  const result = await UserServices.getExpenses(req, {
+    limit :limit,
+    offset :offset,
+    where: { userEmId: req.user.userId },
+    attributes: ["id", "desc", "amount", "cat"],
+  });
 
-   res.json(result);
+  res.json(result);
 };
 
 exports.deleteOne = (req, res) => {
@@ -30,10 +40,13 @@ exports.deleteOne = (req, res) => {
   Expense.findByPk(req.body.id).then((expense) => {
     if (expense) {
       if (expense.userEmId === req.user.userId) {
-        User.decrement('totalExpenses', { by:  expense.amount, where: { id: req.user.userId} });
+        User.decrement("totalExpenses", {
+          by: expense.amount,
+          where: { id: req.user.userId },
+        });
         Expense.destroy({ where: { id: req.body.id } }).then((respo) => {
           console.log(respo);
-          
+
           res.json(respo);
         });
       } else {
@@ -42,3 +55,13 @@ exports.deleteOne = (req, res) => {
     }
   });
 };
+
+exports.getTotalNumberOfExpenses = async (req,res)=>{
+  let Count  =  await Expense.count({
+      where : {
+        UserEmId : req.user.userId
+      }
+    })
+
+  res.json({count : Count});
+}

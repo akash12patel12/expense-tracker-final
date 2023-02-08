@@ -61,7 +61,8 @@ async function showLeaderBoard(e) {
     .get("http://localhost:3000/getLeaderBoard", configP)
     .then((response) => {
       const table = document.getElementById("leaderboard");
-      table.innerHTML = `<h1 class="display-4">Leaderboard</h1>
+      table.innerHTML = `<h1 class="display-4">Leaderboard</h1> <button onclick="showLeaderBoard(event)" class="btn btn-info">Refresh</button>
+
   <th>
     <td>Rank</td>
     

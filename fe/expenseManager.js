@@ -3,7 +3,7 @@ const config = {
     Authorization: localStorage.getItem("token"),
   },
 };
-
+getExpenses(0);
 function submitExpense(e) {
   e.preventDefault();
   const newExpense = {
@@ -12,14 +12,15 @@ function submitExpense(e) {
     cat: e.target.cat.value,
   };
 
-  axios.post("http://localhost:3000/addex", newExpense, config).then((res) => {
-    listExpenses();
+  axios.post("http://localhost:3000/addex", newExpense, config).then(async (res) => {
+     paginate();
+     getExpenses(Math.ceil(await getTotalNumberOfExpenses()/4)-1);
   });
 }
 
-listExpenses();
 
-async function listExpenses() {
+
+async function getExpenses(offset) {
   document.getElementById("expenselist").innerHTML = `  <tr>
    
     <th>Description</th>
@@ -28,7 +29,7 @@ async function listExpenses() {
     <th>Delete</th>
     <th>Edit</th>
 </tr>`;
-  axios.get("http://localhost:3000/getAll", config).then((all) => {
+  axios.post("http://localhost:3000/getAll", {offset : offset}, config).then((all) => {
     // all.data is the array of all expenses
     console.log(all.data);
     all.data.forEach((expense) => {
@@ -48,12 +49,13 @@ async function listExpenses() {
 
 //delete
 
-function deleteExpense(id) {
+async function deleteExpense(id) {
   axios
     .post("http://localhost:3000/delete", { id: id }, config)
-    .then((response) => {
-      console.log(response);
-      listExpenses();
+    .then( async (response) => {
+      // console.log(response);
+      paginate();
+      getExpenses(Math.ceil(await getTotalNumberOfExpenses()/4)-1);
     });
 }
 
@@ -86,4 +88,33 @@ function download(e){
   }).catch(err=>{
    alert(err.response.data.message);
   })
+}
+
+
+//getTotalNumberOfExpenses to generate pagination buttons
+async function getTotalNumberOfExpenses(){
+  return axios.get("http://localhost:3000/getTotalNumberOfExpenses", config).then(res=>{
+      
+      return res.data.count;
+   }).catch(err=>{
+    console.log(err);
+   })
+}
+
+paginate();
+async function paginate(){
+ let count = await getTotalNumberOfExpenses();
+
+ let totalPages = Math.ceil(count/4);
+//  console.log(totalPages);
+  let i = 0;
+  const paginationDiv = document.getElementById('pagination');
+  paginationDiv.innerHTML ='';
+  // console.log(paginationDiv.innerHTML);
+  while(i < totalPages){
+    // console.log(i);
+    paginationDiv.innerHTML = paginationDiv.innerHTML + `<button class="btn btn-primary m-2" onclick="getExpenses(${i})">${i+1}</button>`;
+    // console.log(paginationDiv.innerHTML);
+    i++;
+  } 
 }
